@@ -5,7 +5,8 @@
 #include "GameFramework/FloatingPawnMovement.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "ResourceActor.h" // 상호작용 대상 확인을 위해 추가
+#include "ResourceActor.h"
+#include "NPCCharacter.h" // NPC 클래스 확인을 위해 추가
 
 APlayerPawn::APlayerPawn()
 {
@@ -39,7 +40,7 @@ APlayerPawn::APlayerPawn()
 void APlayerPawn::BeginPlay()
 {
     Super::BeginPlay();
-    
+
     // IMC 등록 로직 [cite: 4219]
     if (APlayerController* pc = Cast<APlayerController>(GetController()))
     {
@@ -87,8 +88,8 @@ void APlayerPawn::Move(const FInputActionValue& value)
 
 void APlayerPawn::Interact(const FInputActionValue& Value)
 {
-    // 1단계: 함수가 실행되는지 확인
-    UE_LOG(LogTemp, Warning, TEXT("Interact 함수 진입! (E 키 눌림)"));
+    // 1단계: 함수가 실행되는지 확인 (이 로그가 안 뜨면 입력 설정 문제)
+    UE_LOG(LogTemp, Warning, TEXT("=== Interact 함수 진입! (E 키 눌림) ==="));
 
     if (interactionBoxComp == nullptr) 
     {
@@ -100,22 +101,30 @@ void APlayerPawn::Interact(const FInputActionValue& Value)
     TArray<AActor*> OverlappingActors;
     interactionBoxComp->GetOverlappingActors(OverlappingActors);
     
-    UE_LOG(LogTemp, Warning, TEXT("현재 감지된 액터 개수: %d"), OverlappingActors.Num());
-
     for (AActor* Actor : OverlappingActors)
     {
-       // 3단계: 걸린 액터 이름 출력
-       UE_LOG(LogTemp, Warning, TEXT("감지된 액터: %s"), *Actor->GetName());
+       if (Actor == nullptr) continue;
 
+       // 3단계: NPC인지 먼저 확인 (새로 추가된 로직)
+       if (ANPCCharacter* NPC = Cast<ANPCCharacter>(Actor))
+       {
+          UE_LOG(LogTemp, Warning, TEXT("NPC 발견! OnInteract를 호출합니다: %s"), *NPC->GetName());
+          NPC->OnInteract();
+          return; // NPC와 상호작용하면 루프 종료
+       }
+
+       // 4단계: 자원 액터인지 확인
        if (AResourceActor* Resource = Cast<AResourceActor>(Actor))
        {
           UE_LOG(LogTemp, Warning, TEXT("자원 액터 발견! Gather 호출합니다."));
           Resource->Gather(1.0f);
+          return; 
        }
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("상호작용 범위 내에 대상이 없습니다."));
 }
 
-// --- PlayerPawn.cpp 파일의 맨 아래에 추가해 주세요! ---
 void APlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
