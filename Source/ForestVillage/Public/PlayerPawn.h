@@ -1,0 +1,58 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "InputActionValue.h" // FInputActionValue 사용을 위해 필요
+#include "PlayerPawn.generated.h"
+
+UCLASS()
+class FORESTVILLAGE_API APlayerPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	APlayerPawn();
+
+protected:
+	virtual void BeginPlay() override;
+
+public: 
+	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// --- 컴포넌트 선언 [cite: 3778] ---
+	UPROPERTY(EditAnywhere, Category = "Components")
+	class UBoxComponent* boxComp;
+
+	// 상호작용 범위를 체크할 박스 컴포넌트 추가
+	UPROPERTY(EditAnywhere, Category = "Components")
+	class UBoxComponent* interactionBoxComp;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
+	class UStaticMeshComponent* meshComp;
+
+	// GEMINI.md 규칙에 따라 SpringArm 제거 (Camera를 Root에 직접 부착)
+	UPROPERTY(EditAnywhere, Category = "Components")
+	class UCameraComponent* cameraComp;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
+	class UFloatingPawnMovement* moveComp;
+
+	// --- 입력 에셋 설정 ---
+	UPROPERTY(EditAnywhere, Category = "Input")
+	class UInputMappingContext* imc_data;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	class UInputAction* ia_move;
+
+	// 상호작용 키 (E키 등)를 위한 입력 에셋
+	UPROPERTY(EditAnywhere, Category = "Input")
+	class UInputAction* ia_interact;
+
+	// 함수 매개변수 타입을 FInputActionValue&로 명시 [cite: 4282]
+	void Move(const FInputActionValue& value);
+
+	// 상호작용 실행 함수 (진단용 로그 버전의 매개변수 추가)
+	void Interact(const FInputActionValue& value);
+};
+
