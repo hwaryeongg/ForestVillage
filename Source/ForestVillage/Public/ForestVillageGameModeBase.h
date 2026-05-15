@@ -31,12 +31,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VillageData")
 	int32 GetResourceCount(EResourceType Type) const;
 
+protected:
+	// 게임 시작 시 호출 (UI 생성용)
+	virtual void BeginPlay() override;
+
+public:
+	// --- UI 설정 ---
+	// 에디터에서 할당할 메인 위젯 클래스 (BP_MainWidget 등)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<class UMainWidget> MainWidgetClass;
+
+	// 생성된 위젯 인스턴스를 보관 (가비지 컬렉션 방지를 위해 UPROPERTY 사용)
+	UPROPERTY()
+	class UMainWidget* CurrentWidget;
+
 private:
 	// GEMINI.md 규칙: 자원 데이터는 private으로 관리하여 캡슐화 유지
 	int32 AppleCount = 0;
 	int32 WoodCount = 0;
 	int32 OrangeCount = 0;
 
-	// UI 갱신 로직 (나중에 위젯 클래스와 연동 예정)
+	// UI 갱신 로직 (위젯의 함수를 호출하여 화면 업데이트)
 	void RefreshHUD();
 };
