@@ -45,12 +45,40 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* ia_move;
 
+	// 마우스 회전을 위한 입력 에셋
+	UPROPERTY(EditAnywhere, Category = "Input")
+	class UInputAction* ia_look;
+
+	// 점프를 위한 입력 에셋
+	UPROPERTY(EditAnywhere, Category = "Input")
+	class UInputAction* ia_jump;
+
 	// 상호작용 키 (E키 등)를 위한 입력 에셋
 	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* ia_interact;
 
+	// --- 이동 및 점프 변수 ---
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float VerticalVelocity = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GravityScale = 2.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float JumpImpulse = 500.0f;
+
+	bool bIsOnGround = true;
+	bool bIsJumping = false;
+
 	// 함수 매개변수 타입을 FInputActionValue&로 명시 [cite: 4282]
 	void Move(const FInputActionValue& value);
+
+	// 마우스 회전 함수
+	void Look(const FInputActionValue& value);
+
+	// 점프 함수
+	void Jump(const FInputActionValue& value);
+	void StopJumping(const FInputActionValue& value);
 
 	// 상호작용 실행 함수 (진단용 로그 버전의 매개변수 추가)
 	void Interact(const FInputActionValue& value);

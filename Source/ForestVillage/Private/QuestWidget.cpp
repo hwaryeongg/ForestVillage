@@ -47,7 +47,6 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
 		// 텍스트 정보 업데이트
 		if (Text_QuestTitle) 
 			Text_QuestTitle->SetText(FText::FromString(TEXT("나무 울타리 복원")));
-
 		if (Text_QuestDescription)
 		{
 			FString Desc = FString::Printf(TEXT("마을 입구의 부서진 울타리를 고쳐야 합니다.\n(필요한 나무: 5 / 현재 보유: %d)"), CurrentWood);

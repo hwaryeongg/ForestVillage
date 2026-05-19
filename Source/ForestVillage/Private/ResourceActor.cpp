@@ -9,7 +9,7 @@
 
 AResourceActor::AResourceActor()
 {
-    // Tick 함수는 필요 없으므로 성능을 위해 끕니다.
+    // Tick 함수는 필요 없으므로 성능을 위해 니다.
     PrimaryActorTick.bCanEverTick = false;
 
     // 1. 충돌체(BoxComp) 생성 및 루트 설정
@@ -52,6 +52,12 @@ void AResourceActor::Gather(float Power)
     // 내구도가 0 이하가 되면
     if (Durability <= 0.0f)
     {
+        // --- 추가 수정: 스폰 전 '폭발' 방지 ---
+        // 나무의 충돌을 미리 꺼서 아이템들이 튕겨나가지 않게 합니다.
+        BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        MeshComp->SetVisibility(false); // 시각적으로 숨김
+
         DropResource(); // 아이템 스폰
         Destroy();      // 자원(나 자신) 파괴
     }
@@ -60,25 +66,38 @@ void AResourceActor::Gather(float Power)
 // 아이템 스폰 함수
 void AResourceActor::DropResource()
 {
-	// 스폰할 아이템이 에디터에서 지정되어 있는지 널 체크(Null Check)
-	if (GetWorld())
-	{
-		// 1. 과일 아이템 스폰 (사과/오렌지 등)
-		if (ItemFactory)
-		{
-			GetWorld()->SpawnActor<AActor>(ItemFactory, GetActorLocation(), GetActorRotation());
-		}
+    if (GetWorld())
+    {
+        // 스폰 설정: 충돌이 있어도 무조건 생성하되 위치를 랜덤하게 분산
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		// 2. 나무 아이템 스폰 (Wood)
-		if (WoodFactory)
-		{
-			// 과일과 겹치지 않게 살짝 옆에 스폰
-			FVector WoodLocation = GetActorLocation() + FVector(30.0f, 30.0f, 0.0f);
-			GetWorld()->SpawnActor<AActor>(WoodFactory, WoodLocation, GetActorRotation());
-		}
+        // 1. 과일 아이템 스폰
+        if (ItemFactory)
+        {
+            // 랜덤 위치 오프셋 (위로 살짝 띄움)
+            FVector RandomOffset = FVector(FMath::RandRange(-30.f, 30.f), FMath::RandRange(-30.f, 30.f), 50.f);
+            AActor* SpawnedItem = GetWorld()->SpawnActor<AActor>(ItemFactory, GetActorLocation() + RandomOffset, GetActorRotation(), SpawnParams);
+            
+            if (SpawnedItem)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("과일 스폰 성공"));
+            }
+        }
 
-		UE_LOG(LogTemp, Warning, TEXT("자원 드랍 완료: 과일 + 나무"));
-	}
+        // 2. 나무 아이템 스폰 (Wood)
+        if (WoodFactory)
+        {
+            // 과일과 겹치지 않게 다른 방향으로 랜덤 오프셋
+            FVector WoodOffset = FVector(FMath::RandRange(-60.f, 60.f), FMath::RandRange(-60.f, 60.f), 50.f);
+            AActor* SpawnedWood = GetWorld()->SpawnActor<AActor>(WoodFactory, GetActorLocation() + WoodOffset, GetActorRotation(), SpawnParams);
+            
+            if (SpawnedWood)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("목재 스폰 성공"));
+            }
+        }
+    }
 }
 
 // 플레이어가 접근했을 때 (빛나게 하기)
