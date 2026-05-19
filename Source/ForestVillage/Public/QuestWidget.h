@@ -7,7 +7,7 @@
 #include "QuestWidget.generated.h"
 
 /**
- * 퀘스트 창 UI를 관리하는 클래스
+ * 마을 복원 퀘스트 목록과 상세 정보를 표시하는 위젯 클래스
  */
 UCLASS()
 class FORESTVILLAGE_API UQuestWidget : public UUserWidget
@@ -15,16 +15,43 @@ class FORESTVILLAGE_API UQuestWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	// --- UI 바인딩 (GEMINI.md 규칙: meta=(BindWidget) 사용) ---
-	// 블루프린트 위젯 내의 버튼 이름을 'CloseButton'으로 지어주세요.
-	UPROPERTY(meta = (BindWidget))
-	class UButton* CloseButton;
+	// UI 갱신 (탭 전환 시 호출)
+	// bShowAvailable: true면 진행 가능, false면 완료된 퀘스트 표시
+	void UpdateQuestView(bool bShowAvailable);
 
 protected:
 	// 위젯이 생성(초기화)될 때 호출되는 함수
 	virtual void NativeConstruct() override;
 
-	// 닫기 버튼 클릭 시 호출될 함수
+	// --- meta=(BindWidget) ---
+	// 블루프린트 위젯 내의 이름과 반드시 일치해야 합니다.
+	
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Btn_TabAvailable;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Btn_TabCompleted;
+
+	UPROPERTY(meta = (BindWidget))
+	class UScrollBox* QuestListBox;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* Text_QuestTitle;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* Text_QuestDescription;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Btn_CompleteQuest;
+
+	// --- 내부 버튼 이벤트 함수 ---
+	
 	UFUNCTION()
-	void OnCloseClicked();
+	void OnAvailableTabClicked();
+
+	UFUNCTION()
+	void OnCompletedTabClicked();
+
+	UFUNCTION()
+	void OnCompleteButtonClicked();
 };

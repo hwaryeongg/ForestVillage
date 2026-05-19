@@ -31,7 +31,10 @@ public:
 	float Durability = 3.0f; // 기본 내구도 (3번 맞으면 파괴)
 
 	UPROPERTY(EditAnywhere, Category = "Resource")
-	TSubclassOf<class AActor> ItemFactory; // 파괴 시 떨어뜨릴 아이템 클래스 지정 (AItemActor 역할)
+	TSubclassOf<class AActor> ItemFactory; // 파괴 시 떨어뜨릴 아이템 클래스 지정 (사과/오렌지 등)
+
+	UPROPERTY(EditAnywhere, Category = "Resource")
+	TSubclassOf<class AActor> WoodFactory; // 함께 떨어뜨릴 나무(Wood) 아이템 클래스 지정
 
 	// --- 3. 함수 ---
 	// 채집을 당할 때 호출되는 함수

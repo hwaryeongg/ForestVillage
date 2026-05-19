@@ -60,13 +60,25 @@ void AResourceActor::Gather(float Power)
 // 아이템 스폰 함수
 void AResourceActor::DropResource()
 {
-    // 스폰할 아이템이 에디터에서 지정되어 있는지 널 체크(Null Check)
-    if (GetWorld() && ItemFactory)
-    {
-        // 내 위치, 내 회전값 그대로 아이템을 생성합니다 (수업 자료 2일차 SpawnActor 응용)
-        GetWorld()->SpawnActor<AActor>(ItemFactory, GetActorLocation(), GetActorRotation());
-        UE_LOG(LogTemp, Warning, TEXT("자원 아이템 드랍 성공!"));
-    }
+	// 스폰할 아이템이 에디터에서 지정되어 있는지 널 체크(Null Check)
+	if (GetWorld())
+	{
+		// 1. 과일 아이템 스폰 (사과/오렌지 등)
+		if (ItemFactory)
+		{
+			GetWorld()->SpawnActor<AActor>(ItemFactory, GetActorLocation(), GetActorRotation());
+		}
+
+		// 2. 나무 아이템 스폰 (Wood)
+		if (WoodFactory)
+		{
+			// 과일과 겹치지 않게 살짝 옆에 스폰
+			FVector WoodLocation = GetActorLocation() + FVector(30.0f, 30.0f, 0.0f);
+			GetWorld()->SpawnActor<AActor>(WoodFactory, WoodLocation, GetActorRotation());
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("자원 드랍 완료: 과일 + 나무"));
+	}
 }
 
 // 플레이어가 접근했을 때 (빛나게 하기)
