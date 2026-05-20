@@ -35,7 +35,7 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
 
 			switch (QuestIdx)
 			{
-			case 0: 
+			case 0: // Quest 1: 마을 입구 보수
 				Title = TEXT("Quest 1: 마을 입구 보수");
 				{
 					int32 Wood = GM->GetResourceCount(EResourceType::Wood);
@@ -44,7 +44,7 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
 				}
 				break;
 
-			case 1: 
+			case 1: // Quest 2: 따뜻한 주방 복원
 				Title = TEXT("Quest 2: 따뜻한 주방 복원");
 				{
 					int32 Stone = GM->GetResourceCount(EResourceType::Stone);
@@ -55,7 +55,7 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
 				}
 				break;
 
-			case 2: 
+			case 2: // Quest 3: 광장의 생명수 (최종)
 				Title = TEXT("Quest 3: 광장의 생명수 (최종)");
 				{
 					int32 Stone = GM->GetResourceCount(EResourceType::Stone);
@@ -63,7 +63,7 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
 					int32 Lapis = GM->GetResourceCount(EResourceType::Lapis);
 					int32 Diamond = GM->GetResourceCount(EResourceType::Diamond);
 					bCanComplete = (Stone >= 10 && Wood >= 5 && Lapis >= 1 && Diamond >= 1);
-					Desc = FString::Printf(TEXT("마을의 심장인 우물을 정화합시다.\n(돌:%d/10, 목재:%d/5, 라피스:%d/1, 다이아:%d/1)"), Stone, Wood, Lapis, Diamond);
+					Desc = FString::Printf(TEXT("마을의 심장인 우물을 정화합시다.\n(돌: %d/10, 목재: %d/5, 라피스: %d/1, 다이아: %d/1)"), Stone, Wood, Lapis, Diamond);
 				}
 				break;
 

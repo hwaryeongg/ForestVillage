@@ -9,6 +9,7 @@
 #include "NPCCharacter.h" 
 #include "ItemActor.h"    
 #include "QuestWidget.h"
+#include "InventoryWidget.h" // 신규 추가: 인벤토리 위젯
 #include "Blueprint/UserWidget.h"
 
 APlayerPawn::APlayerPawn()
@@ -76,6 +77,12 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
        EnhancedInput->BindAction(ia_jump, ETriggerEvent::Completed, this, &APlayerPawn::StopJumping);
        EnhancedInput->BindAction(ia_interact, ETriggerEvent::Started, this, &APlayerPawn::Interact);
        EnhancedInput->BindAction(ia_quest, ETriggerEvent::Started, this, &APlayerPawn::ToggleQuestUI);
+       
+       // I키: 인벤토리 입력 바인딩 연결
+       if (ia_inventory)
+       {
+           EnhancedInput->BindAction(ia_inventory, ETriggerEvent::Started, this, &APlayerPawn::ToggleInventoryUI);
+       }
     }
 }
 
@@ -118,18 +125,21 @@ void APlayerPawn::Interact(const FInputActionValue& Value)
     {
        if (Actor == nullptr) continue;
 
+       // NPC(모모)와의 대화 상호작용
        if (ANPCCharacter* NPC = Cast<ANPCCharacter>(Actor))
        {
           NPC->OnInteract();
           return;
        }
 
+       // 자원 타격 상호작용
        if (AResourceActor* Resource = Cast<AResourceActor>(Actor))
        {
           Resource->Gather(1.0f);
           return; 
        }
 
+       // 아이템 줍기 상호작용
        if (AItemActor* Item = Cast<AItemActor>(Actor))
        {
           Item->Collect();
@@ -170,10 +180,46 @@ void APlayerPawn::ToggleQuestUI(const FInputActionValue& value)
     }
 }
 
+// 신규 추가: 인벤토리 UI 토글 함수
+void APlayerPawn::ToggleInventoryUI(const FInputActionValue& value)
+{
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC) return;
+
+    // 1. 인벤토리가 이미 열려있다면 닫기
+    if (CurrentInventoryUI && CurrentInventoryUI->IsInViewport())
+    {
+        CurrentInventoryUI->CloseUI(); // CloseUI 내부에서 마우스 숨김 처리됨
+        return;
+    }
+
+    // 2. 안 열려있다면 생성 및 화면에 띄우기
+    if (InventoryWidgetClass)
+    {
+        if (!CurrentInventoryUI)
+        {
+            CurrentInventoryUI = CreateWidget<UInventoryWidget>(GetWorld(), InventoryWidgetClass);
+        }
+
+        if (CurrentInventoryUI)
+        {
+            CurrentInventoryUI->AddToViewport();
+            CurrentInventoryUI->UpdateInventory(); // 열 때마다 최신 자원 개수 갱신
+
+            // UI 조작 모드로 전환 및 마우스 표시
+            FInputModeGameAndUI InputMode;
+            InputMode.SetWidgetToFocus(CurrentInventoryUI->TakeWidget());
+            PC->SetInputMode(InputMode);
+            PC->bShowMouseCursor = true;
+        }
+    }
+}
+
 void APlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    // 가상 중력을 위한 라인트레이스 충돌 검사
     FHitResult HitResult;
     FVector Start = GetActorLocation();
     FVector End = Start - FVector(0.0f, 0.0f, 55.0f);
@@ -229,6 +275,6 @@ void APlayerPawn::StopJumping(const FInputActionValue& value)
     bIsJumping = false;
     if (VerticalVelocity > 0)
     {
-        VerticalVelocity *= 0.5f;
+        VerticalVelocity *= 0.5f; // 아날로그 점프(숏점프) 지원
     }
 }

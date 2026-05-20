@@ -35,8 +35,14 @@ public:
 	/** 플레이어와 상호작용 시 호출될 함수 */
 	void OnInteract();
 
+	/** 대화창을 자동으로 닫기 위한 함수 */
+	void CloseDialogueUI();
+
 private:
 	// 생성된 대화 위젯 인스턴스
 	UPROPERTY()
 	class UUserWidget* CurrentDialogueUI;
+
+	// 대화창 자동 소멸을 위한 타이머 핸들
+	FTimerHandle DialogueTimerHandle;
 };
