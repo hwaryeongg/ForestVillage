@@ -36,9 +36,6 @@ protected:
 	class UButton* Btn_TabCompleted;
 
 	UPROPERTY(meta = (BindWidget))
-	class UScrollBox* QuestListBox;
-
-	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Text_QuestTitle;
 
 	UPROPERTY(meta = (BindWidget))
