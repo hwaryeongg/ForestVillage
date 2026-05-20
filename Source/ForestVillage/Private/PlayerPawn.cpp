@@ -153,15 +153,22 @@ void APlayerPawn::ToggleQuestUI(const FInputActionValue& value)
     APlayerController* PC = Cast<APlayerController>(GetController());
     if (!PC) return;
 
+    // 1. 퀘스트 창이 이미 열려있다면 닫기 (인벤토리와 완벽히 독립)
     if (CurrentQuestUI && CurrentQuestUI->IsInViewport())
     {
         CurrentQuestUI->RemoveFromParent();
-        FInputModeGameOnly InputMode;
-        PC->SetInputMode(InputMode);
-        PC->bShowMouseCursor = false;
+        
+        // 퀘스트 창을 닫을 때, 인벤토리도 닫혀있을 때만 마우스를 숨깁니다.
+        if (!(CurrentInventoryUI && CurrentInventoryUI->IsInViewport()))
+        {
+            FInputModeGameOnly InputMode;
+            PC->SetInputMode(InputMode);
+            PC->bShowMouseCursor = false;
+        }
         return;
     }
 
+    // 2. 안 열려있다면 띄우기
     if (QuestWidgetClass)
     {
         if (!CurrentQuestUI)
@@ -172,8 +179,10 @@ void APlayerPawn::ToggleQuestUI(const FInputActionValue& value)
         if (CurrentQuestUI)
         {
             CurrentQuestUI->AddToViewport();
+            CurrentQuestUI->UpdateQuestView(true); // 항상 '진행 가능' 탭으로 초기화
+
             FInputModeGameAndUI InputMode;
-            InputMode.SetWidgetToFocus(CurrentQuestUI->TakeWidget());
+            InputMode.SetHideCursorDuringCapture(false);
             PC->SetInputMode(InputMode);
             PC->bShowMouseCursor = true;
         }
@@ -186,14 +195,22 @@ void APlayerPawn::ToggleInventoryUI(const FInputActionValue& value)
     APlayerController* PC = Cast<APlayerController>(GetController());
     if (!PC) return;
 
-    // 1. 인벤토리가 이미 열려있다면 닫기
+    // 1. 인벤토리가 이미 열려있다면 닫기 (퀘스트와 완벽히 독립)
     if (CurrentInventoryUI && CurrentInventoryUI->IsInViewport())
     {
-        CurrentInventoryUI->CloseUI(); // CloseUI 내부에서 마우스 숨김 처리됨
+        CurrentInventoryUI->RemoveFromParent(); 
+        
+        // 인벤토리를 닫을 때, 퀘스트 창도 닫혀있을 때만 마우스를 숨깁니다.
+        if (!(CurrentQuestUI && CurrentQuestUI->IsInViewport()))
+        {
+            FInputModeGameOnly InputMode;
+            PC->SetInputMode(InputMode);
+            PC->bShowMouseCursor = false;
+        }
         return;
     }
 
-    // 2. 안 열려있다면 생성 및 화면에 띄우기
+    // 2. 안 열려있다면 화면에 띄우기
     if (InventoryWidgetClass)
     {
         if (!CurrentInventoryUI)
@@ -204,11 +221,10 @@ void APlayerPawn::ToggleInventoryUI(const FInputActionValue& value)
         if (CurrentInventoryUI)
         {
             CurrentInventoryUI->AddToViewport();
-            CurrentInventoryUI->UpdateInventory(); // 열 때마다 최신 자원 개수 갱신
+            CurrentInventoryUI->UpdateInventory(); // 최신 자원 개수 갱신
 
-            // UI 조작 모드로 전환 및 마우스 표시
             FInputModeGameAndUI InputMode;
-            InputMode.SetWidgetToFocus(CurrentInventoryUI->TakeWidget());
+            InputMode.SetHideCursorDuringCapture(false);
             PC->SetInputMode(InputMode);
             PC->bShowMouseCursor = true;
         }

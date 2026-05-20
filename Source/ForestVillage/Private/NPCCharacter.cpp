@@ -2,9 +2,8 @@
 #include "Components/BoxComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "ForestVillageGameModeBase.h"
+#include "DialogueWidget.h" // 신규 대화 위젯 헤더 포함
 #include "GameFramework/PlayerController.h"
-#include "Components/TextBlock.h"
-#include "Components/RichTextBlock.h" // 리치 텍스트 지원
 
 ANPCCharacter::ANPCCharacter()
 {
@@ -21,104 +20,67 @@ void ANPCCharacter::BeginPlay()
 
 void ANPCCharacter::OnInteract()
 {
-	// 1. 이미 대화창이 열려 있다면? -> 타이머 취소하고 즉시 닫기
-	if (CurrentDialogueUI && CurrentDialogueUI->IsInViewport())
-	{
-		CloseDialogueUI();
-		return;
-	}
-
 	AForestVillageGameModeBase* GM = Cast<AForestVillageGameModeBase>(GetWorld()->GetAuthGameMode());
 	if (!GM) return;
 
 	int32 QuestIdx = GM->GetCurrentQuestIndex();
-	FString DialogueText = TEXT("");
 
-	// v5.7 최종 시나리오 스크립트 적용
+	// 1. 대사 리스트(배열)를 담을 그릇 생성
+	TArray<FDialogueLine> DialogueList;
+
+	// 2. 퀘스트 단계별 대사 설정 (구조체로 하나씩 추가)
 	switch (QuestIdx)
 	{
-	case 0: // Chapter 1: 낡은 벤치 위의 고양이
-		DialogueText = TEXT("모모: (꼬리를 탁, 탁 치며 라비를 물끄러미 바라본다.) ...야아아옹-?\n")
-					   TEXT("라비: 어라... 너 모모 맞지? 할아버지가 늘 자랑하시던 꼬마 턱시도 신사... 나 기억하는구나.\n")
-					   TEXT("모모: (입구가 가시덤불로 완전히 막혀버린 진입로를 가리키며 작게 운다.) 애옹...\n")
-					   TEXT("라비: 할아버지의 도구 가방... 알았어, 모모야. 주변 소나무를 베어서 이 입구부터 싹 치워보자!");
+	case 0:
+		DialogueList.Add({ TEXT("모모"), TEXT("야아아옹-? (마을 입구의 가시덤불을 치워달라는 듯 서글프게 운다.)") });
+		DialogueList.Add({ TEXT("라비"), TEXT("마을 꼴이 이게 뭐니... 할아버지가 안 계신 동안 덤불이 꽉 막혀버렸네.") });
+		DialogueList.Add({ TEXT("라비"), TEXT("걱정 마 모모야, 내가 이 입구부터 깨끗하게 치워줄게!") });
 		break;
-
-	case 1: // Chapter 2: 일기장의 약속과 따뜻한 요리솥
-		DialogueText = TEXT("모모: (낡은 가죽 책 위를 꾹꾹이하듯 밟으며 조용히 가릉거린다.) 골골골...\n")
-					   TEXT("라비: 이건 할아버지의 연구 일지잖아? 정령석을 광산 바위에 봉인해 두셨다고...?\n")
-					   TEXT("라비: 모모야, 네가 나를 일기장으로 이끈 이유가 이거였구나! 근데 배가 너무 고프네.\n")
-					   TEXT("라비: 일단 아궁이를 먼저 고쳐서 따뜻한 사과 스튜부터 끓여 먹자!");
+	case 1:
+		DialogueList.Add({ TEXT("모모"), TEXT("골골골... (발 밑의 낡은 일기장을 톡톡 가리킨다.)") });
+		DialogueList.Add({ TEXT("라비"), TEXT("이건 할아버지의 일기장이잖아? 정령석을 모아 제단에 바치면 마을이 살아난다고?") });
+		DialogueList.Add({ TEXT("라비"), TEXT("좋아, 하지만 너무 배가 고프네... 일단 아궁이 제단부터 고쳐서 사과 스튜를 끓여 먹어야겠어.") });
 		break;
-
-	case 2: // Chapter 3: 다시 흐르는 생명수
-		DialogueText = TEXT("모모: (메마른 우물 기둥 위에서 라비를 뚫어지게 바라본다.) 야옹.\n")
-					   TEXT("라비: 우물을 정화하려면 푸른 보석 '라피스 라즐리'와 수호석 '다이아몬드'가 필요해.\n")
-					   TEXT("라비: 돌 10개에 목재 5개... 좋아, 광산으로 가서 마지막 정령석들을 찾아오자!");
+	case 2:
+		DialogueList.Add({ TEXT("모모"), TEXT("냐-옹! (광장 중앙의 우물 기둥 위에서 힘차게 울며 라비를 기다린다.)") });
+		DialogueList.Add({ TEXT("라비"), TEXT("이제 마지막 제단이야. 우물을 정화해서 마을에 생명수를 다시 흐르게 하자!") });
 		break;
-
-	default: // 최종 엔딩
-		DialogueText = TEXT("라비: 부서진 울타리는 다시 단단해졌고, 요리솥 아래엔 따뜻한 온기가 돌기 시작했어.\n")
-					   TEXT("라비: 할아버지, 저 모모와 함께 이곳에서 아주 따뜻하고 행복하게 지내볼게요.\n")
-					   TEXT("모모: 골골골... 냐아아옹! (라비의 어깨 위에서 행복하게 가릉거린다.)");
+	default:
+		DialogueList.Add({ TEXT("모모"), TEXT("야오옹~ (행복한 표정으로 가만히 라비를 바라본다.)") });
+		DialogueList.Add({ TEXT("라비"), TEXT("우리 마을이 드디어 원래 모습을 되찾았어. 고마워 모모야!") });
 		break;
 	}
 
-	// 2. 위젯 표시 및 텍스트 설정
+	// 3. 이미 대화창이 떠 있다면 무시 (클릭 연타 방지)
+	if (CurrentDialogueUI && CurrentDialogueUI->IsInViewport())
+	{
+		return;
+	}
+
+	// 4. 대화창 생성 및 화면 출력
 	if (DialogueWidgetClass)
 	{
 		if (!CurrentDialogueUI)
 		{
-			CurrentDialogueUI = CreateWidget<UUserWidget>(GetWorld(), DialogueWidgetClass);
+			CurrentDialogueUI = CreateWidget<UDialogueWidget>(GetWorld(), DialogueWidgetClass);
 		}
 		
 		if (CurrentDialogueUI)
 		{
-			if (!CurrentDialogueUI->IsInViewport())
-			{
-				CurrentDialogueUI->AddToViewport();
-			}
+			CurrentDialogueUI->AddToViewport();
 
-			// 위젯 내 "Text_Message" 위젯 검색
-			UWidget* FoundWidget = CurrentDialogueUI->GetWidgetFromName(TEXT("Text_Message"));
-			if (FoundWidget)
+			// UI 내부의 StartDialogue 함수를 호출하여 배열 데이터 전달
+			CurrentDialogueUI->StartDialogue(DialogueList);
+			
+			// 마우스 활성화 및 UI 전용 조작으로 변경
+			APlayerController* PC = GetWorld()->GetFirstPlayerController();
+			if (PC)
 			{
-				UTextBlock* MsgLabel = Cast<UTextBlock>(FoundWidget);
-				if (MsgLabel)
-				{
-					MsgLabel->SetText(FText::FromString(DialogueText));
-					UE_LOG(LogTemp, Warning, TEXT("NPC: Dialogue Text Set (TextBlock)"));
-				}
-				else
-				{
-					URichTextBlock* RichMsgLabel = Cast<URichTextBlock>(FoundWidget);
-					if (RichMsgLabel)
-					{
-						RichMsgLabel->SetText(FText::FromString(DialogueText));
-						UE_LOG(LogTemp, Warning, TEXT("NPC: Dialogue Text Set (RichTextBlock)"));
-					}
-					else
-					{
-						UE_LOG(LogTemp, Error, TEXT("NPC: 'Text_Message' is a '%s', NOT a TextBlock/RichTextBlock!"), *FoundWidget->GetClass()->GetName());
-					}
-				}
+				FInputModeGameAndUI InputMode;
+				InputMode.SetWidgetToFocus(CurrentDialogueUI->TakeWidget());
+				PC->SetInputMode(InputMode);
+				PC->bShowMouseCursor = true;
 			}
-
-			// --- [추가] 3초 뒤 자동 닫기 타이머 설정 ---
-			GetWorldTimerManager().ClearTimer(DialogueTimerHandle);
-			GetWorldTimerManager().SetTimer(DialogueTimerHandle, this, &ANPCCharacter::CloseDialogueUI, 3.0f, false);
 		}
 	}
-}
-
-void ANPCCharacter::CloseDialogueUI()
-{
-	if (CurrentDialogueUI && CurrentDialogueUI->IsInViewport())
-	{
-		CurrentDialogueUI->RemoveFromParent();
-		UE_LOG(LogTemp, Warning, TEXT("NPC: Dialogue UI Closed by Timer."));
-	}
-
-	// 타이머 핸들 정리
-	GetWorldTimerManager().ClearTimer(DialogueTimerHandle);
 }
