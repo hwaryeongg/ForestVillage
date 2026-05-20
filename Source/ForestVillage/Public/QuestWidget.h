@@ -19,6 +19,9 @@ public:
 	// bShowAvailable: true면 진행 가능, false면 완료된 퀘스트 표시
 	void UpdateQuestView(bool bShowAvailable);
 
+	/** 위젯을 닫고 입력 모드를 복구하는 공용 함수 */
+	void CloseUI();
+
 protected:
 	// 위젯이 생성(초기화)될 때 호출되는 함수
 	virtual void NativeConstruct() override;

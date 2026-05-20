@@ -70,6 +70,12 @@ void UQuestWidget::OnCompleteButtonClicked()
 	// 4. 실제 복원 로직 실행 (로그 출력 후 위젯 닫기)
 	UE_LOG(LogTemp, Warning, TEXT("퀘스트 완료: 마을 복원 시퀀스 시작!"));
 	
+	// 닫기 공용 함수 호출
+	CloseUI();
+}
+
+void UQuestWidget::CloseUI()
+{
 	// 화면에서 위젯 제거
 	RemoveFromParent();
 	

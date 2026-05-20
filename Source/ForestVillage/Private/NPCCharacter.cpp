@@ -29,18 +29,22 @@ void ANPCCharacter::OnInteract()
 {
 	UE_LOG(LogTemp, Warning, TEXT("NPC: OnInteract 호출됨!"));
 
-	// 1. 위젯이 이미 화면에 떠 있는지 확인
+	// 1. 위젯이 이미 생성되어 있고 뷰포트에 있다면 -> 닫기 (Toggle 기능)
 	if (CurrentQuestUI && CurrentQuestUI->IsInViewport())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("NPC: 이미 위젯이 뷰포트에 있습니다."));
+		UE_LOG(LogTemp, Warning, TEXT("NPC: 위젯이 이미 열려 있습니다. 닫기를 시도합니다."));
+		CurrentQuestUI->CloseUI(); // 위젯 내부의 닫기 로직 호출
 		return;
 	}
 
 	// 2. 퀘스트 위젯 클래스 설정 여부 확인
 	if (QuestWidgetClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("NPC: QuestWidgetClass 발견. 위젯 생성을 시도합니다."));
-		CurrentQuestUI = CreateWidget<UQuestWidget>(GetWorld(), QuestWidgetClass);
+		// 이전에 생성된 위젯이 없다면 새로 생성합니다.
+		if (CurrentQuestUI == nullptr)
+		{
+			CurrentQuestUI = CreateWidget<UQuestWidget>(GetWorld(), QuestWidgetClass);
+		}
 		
 		if (CurrentQuestUI)
 		{
