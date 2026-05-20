@@ -15,18 +15,9 @@ class FORESTVILLAGE_API UMainWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	// --- UI 바인딩 (GEMINI.md 규칙: meta=(BindWidget) 사용) ---
-	// 블루프린트 위젯 내의 텍스트 블록 이름과 정확히 일치해야 합니다.
+	// HUD 다이어트: 상시 자원 표시는 더 이상 하지 않습니다.
+	// 필요 시 퀘스트 알림용 텍스트 등을 추가할 수 있습니다.
 	
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* AppleText;
-
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* WoodText;
-
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* OrangeText;
-
-	// 자원 수치를 UI에 업데이트하는 함수
-	void UpdateResourceUI(int32 Apple, int32 Wood, int32 Orange);
+	// 자원 수치를 UI에 업데이트하는 함수 (호환성을 위해 선언만 유지)
+	void UpdateResourceUI(int32 Apple, int32 Wood, int32 Orange) {}
 };

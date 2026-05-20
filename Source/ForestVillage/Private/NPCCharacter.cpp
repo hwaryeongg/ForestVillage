@@ -1,21 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "NPCCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "QuestWidget.h"
+#include "ForestVillageGameModeBase.h"
 #include "GameFramework/PlayerController.h"
 
-// 생성자: 컴포넌트 초기화
 ANPCCharacter::ANPCCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
-	// 1. 플레이어 감지 영역(BoxComponent) 생성 및 부착
 	InteractionArea = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionArea"));
 	InteractionArea->SetupAttachment(RootComponent);
-	
-	// 감지 영역 크기 설정 (반지름 개념이므로 200, 200, 100 크기)
 	InteractionArea->SetBoxExtent(FVector(200.f, 200.f, 100.f));
 }
 
@@ -24,53 +17,45 @@ void ANPCCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
-// 상호작용 실행 함수
 void ANPCCharacter::OnInteract()
 {
-	UE_LOG(LogTemp, Warning, TEXT("NPC: OnInteract 호출됨!"));
+	AForestVillageGameModeBase* GM = Cast<AForestVillageGameModeBase>(GetWorld()->GetAuthGameMode());
+	if (!GM) return;
 
-	// 1. 위젯이 이미 생성되어 있고 뷰포트에 있다면 -> 닫기 (Toggle 기능)
-	if (CurrentQuestUI && CurrentQuestUI->IsInViewport())
+	int32 QuestIdx = GM->GetCurrentQuestIndex();
+	FString DialogueText = TEXT("");
+
+	// 퀘스트 단계별 대사 설정
+	switch (QuestIdx)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("NPC: 위젯이 이미 열려 있습니다. 닫기를 시도합니다."));
-		CurrentQuestUI->CloseUI(); // 위젯 내부의 닫기 로직 호출
-		return;
+	case 0:
+		DialogueText = TEXT("모모: 야아아옹-? (입구의 가시덤불을 치워달라는 듯 서글프게 운다.)\n라비: 걱정 마 모모야, 내가 이 입구부터 깨끗하게 치워줄게!");
+		break;
+	case 1:
+		DialogueText = TEXT("모모: 골골골... (낡은 일기장을 가리키며 냐아옹!)\n라비: 할아버지의 일기장이잖아? 아궁이를 먼저 고쳐서 밥부터 먹어야겠어.");
+		break;
+	case 2:
+		DialogueText = TEXT("모모: 냐-옹! (우물 기둥 위에서 힘차게 울며 라비를 기다린다.)\n라비: 이제 마지막이야. 우물을 정화해서 생명수를 다시 흐르게 하자!");
+		break;
+	default:
+		DialogueText = TEXT("모모: 야오옹 (행복한 표정으로 가만히 라비를 바라본다.)");
+		break;
 	}
 
-	// 2. 퀘스트 위젯 클래스 설정 여부 확인
-	if (QuestWidgetClass)
+	UE_LOG(LogTemp, Warning, TEXT("=== Dialogue ===\n%s"), *DialogueText);
+
+	// 대화 위젯 표시 로직 (필요 시)
+	if (DialogueWidgetClass)
 	{
-		// 이전에 생성된 위젯이 없다면 새로 생성합니다.
-		if (CurrentQuestUI == nullptr)
+		if (!CurrentDialogueUI)
 		{
-			CurrentQuestUI = CreateWidget<UQuestWidget>(GetWorld(), QuestWidgetClass);
+			CurrentDialogueUI = CreateWidget<UUserWidget>(GetWorld(), DialogueWidgetClass);
 		}
 		
-		if (CurrentQuestUI)
+		if (CurrentDialogueUI && !CurrentDialogueUI->IsInViewport())
 		{
-			// 3. 화면에 추가
-			CurrentQuestUI->AddToViewport();
-			UE_LOG(LogTemp, Warning, TEXT("NPC: 위젯이 성공적으로 뷰포트에 추가되었습니다."));
-			
-			// 4. 마우스 커서 및 조작 모드 설정
-			APlayerController* PC = GetWorld()->GetFirstPlayerController();
-			if (PC)
-			{
-				FInputModeGameAndUI InputMode;
-				InputMode.SetWidgetToFocus(CurrentQuestUI->TakeWidget());
-				PC->SetInputMode(InputMode);
-				PC->bShowMouseCursor = true;
-				UE_LOG(LogTemp, Warning, TEXT("NPC: 마우스 커서 및 입력 모드가 전환되었습니다."));
-			}
+			CurrentDialogueUI->AddToViewport();
+			// (참고: 대화 위젯 내부에 텍스트를 세팅하는 블루프린트 로직이 있다고 가정합니다.)
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("NPC: 위젯 인스턴스 생성 실패!"));
-		}
-	}
-	else
-	{
-		// 이 로그가 뜬다면 에디터에서 NPC 블루프린트의 QuestWidgetClass를 설정하지 않은 것입니다.
-		UE_LOG(LogTemp, Error, TEXT("NPC: QuestWidgetClass가 설정되지 않았습니다! (에디터 확인 필요)"));
 	}
 }

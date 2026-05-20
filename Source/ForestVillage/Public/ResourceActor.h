@@ -36,6 +36,22 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Resource")
 	TSubclassOf<class AActor> WoodFactory; // 함께 떨어뜨릴 나무(Wood) 아이템 클래스 지정
 
+	// --- 2-1. 바위 관련 설정 ---
+	UPROPERTY(EditAnywhere, Category = "Resource")
+	bool bIsRockNode = false;
+
+	UPROPERTY(EditAnywhere, Category = "Resource")
+	TSubclassOf<class AActor> StoneFactory;
+
+	UPROPERTY(EditAnywhere, Category = "Resource")
+	TSubclassOf<class AActor> RubyFactory;
+
+	UPROPERTY(EditAnywhere, Category = "Resource")
+	TSubclassOf<class AActor> DiamondFactory;
+
+	UPROPERTY(EditAnywhere, Category = "Resource")
+	TSubclassOf<class AActor> LapisFactory;
+
 	// --- 3. 함수 ---
 	// 채집을 당할 때 호출되는 함수
 	void Gather(float Power);

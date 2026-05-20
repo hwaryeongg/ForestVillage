@@ -37,53 +37,87 @@ void AForestVillageGameModeBase::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("GameMode: MainWidgetClass가 설정되지 않았습니다! (에디터 확인 필요)"));
 	}
 }
-
 void AForestVillageGameModeBase::AddResource(EResourceType Type, int32 Amount)
 {
 	// 타입에 따라 해당하는 카운터 증가
 	switch (Type)
 	{
-	case EResourceType::Apple:
-		AppleCount += Amount;
-		break;
-	case EResourceType::Wood:
-		WoodCount += Amount;
-		break;
-	case EResourceType::Orange:
-		OrangeCount += Amount;
-		break;
+	case EResourceType::Apple:   AppleCount += Amount;   break;
+	case EResourceType::Wood:    WoodCount += Amount;    break;
+	case EResourceType::Orange:  OrangeCount += Amount;  break;
+	case EResourceType::Stone:   StoneCount += Amount;   break;
+	case EResourceType::Ruby:    RubyCount += Amount;    break;
+	case EResourceType::Diamond: DiamondCount += Amount; break;
+	case EResourceType::Lapis:   LapisCount += Amount;   break;
 	}
 
 	// 데이터 무결성 확인을 위한 로그
-	UE_LOG(LogTemp, Warning, TEXT("자원 획득! [현재 수량] Apple: %d, Wood: %d, Orange: %d"), 
-		AppleCount, WoodCount, OrangeCount);
+	UE_LOG(LogTemp, Warning, TEXT("자원 획득! [현재 수량] Apple:%d, Wood:%d, Orange:%d, Stone:%d, Ruby:%d, Diamond:%d, Lapis:%d"), 
+		AppleCount, WoodCount, OrangeCount, StoneCount, RubyCount, DiamondCount, LapisCount);
 
 	// 데이터가 변했으니 UI를 새로고침합니다.
 	RefreshHUD();
+}
+
+bool AForestVillageGameModeBase::SpendResource(EResourceType Type, int32 Amount)
+{
+	// 소지량 확인
+	if (GetResourceCount(Type) < Amount) return false;
+
+	// 타입에 따라 차감
+	switch (Type)
+	{
+	case EResourceType::Apple:   AppleCount -= Amount;   break;
+	case EResourceType::Wood:    WoodCount -= Amount;    break;
+	case EResourceType::Orange:  OrangeCount -= Amount;  break;
+	case EResourceType::Stone:   StoneCount -= Amount;   break;
+	case EResourceType::Ruby:    RubyCount -= Amount;    break;
+	case EResourceType::Diamond: DiamondCount -= Amount; break;
+	case EResourceType::Lapis:   LapisCount -= Amount;   break;
+	}
+
+	RefreshHUD();
+	return true;
 }
 
 int32 AForestVillageGameModeBase::GetResourceCount(EResourceType Type) const
 {
 	switch (Type)
 	{
-	case EResourceType::Apple:  return AppleCount;
-	case EResourceType::Wood:   return WoodCount;
-	case EResourceType::Orange: return OrangeCount;
-	default:                    return 0;
+	case EResourceType::Apple:   return AppleCount;
+	case EResourceType::Wood:    return WoodCount;
+	case EResourceType::Orange:  return OrangeCount;
+	case EResourceType::Stone:   return StoneCount;
+	case EResourceType::Ruby:    return RubyCount;
+	case EResourceType::Diamond: return DiamondCount;
+	case EResourceType::Lapis:   return LapisCount;
+	default:                     return 0;
 	}
+}
+
+void AForestVillageGameModeBase::CompleteQuest()
+{
+	CurrentQuestIndex++;
+	UE_LOG(LogTemp, Warning, TEXT("퀘스트 완료! 다음 인덱스: %d"), CurrentQuestIndex);
+
+	// 엔딩 체크 (퀘스트 3 완료 후)
+	if (CurrentQuestIndex > 2)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("모든 퀘스트 완료! 엔딩 시퀀스를 준비합니다."));
+		// 추후 엔딩 처리 로직 추가 가능
+	}
+
+	RefreshHUD();
 }
 
 void AForestVillageGameModeBase::RefreshHUD()
 {
 	// 위젯 인스턴스가 유효하다면 데이터를 전달하여 UI 갱신
+	// (참고: MainWidget은 상시 HUD에서 인벤토리 정보가 빠지므로, QuestWidget 등에서 이를 참조하게 될 것입니다.)
 	if (CurrentWidget)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UI 데이터 갱신 중: Apple:%d, Wood:%d, Orange:%d"), AppleCount, WoodCount, OrangeCount);
+		// 기존 UI가 있다면 업데이트 (파라미터가 3개뿐이므로 일단 유지)
 		CurrentWidget->UpdateResourceUI(AppleCount, WoodCount, OrangeCount);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("RefreshHUD 실패: CurrentWidget이 NULL입니다!"));
 	}
 }
 

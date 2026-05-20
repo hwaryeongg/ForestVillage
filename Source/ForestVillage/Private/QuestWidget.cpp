@@ -1,17 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "QuestWidget.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/ScrollBox.h"
-#include "ForestVillageGameModeBase.h" // 실제 게임모드 헤더 포함
+#include "ForestVillageGameModeBase.h" 
 #include "GameFramework/PlayerController.h"
 
 void UQuestWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// 1. 버튼 이벤트 바인딩 (유효성 검사 후 연결)
 	if (Btn_TabAvailable) 
 		Btn_TabAvailable->OnClicked.AddDynamic(this, &UQuestWidget::OnAvailableTabClicked);
 	
@@ -21,36 +18,66 @@ void UQuestWidget::NativeConstruct()
 	if (Btn_CompleteQuest) 
 		Btn_CompleteQuest->OnClicked.AddDynamic(this, &UQuestWidget::OnCompleteButtonClicked);
 
-	// 2. 기본값으로 '진행 가능' 탭을 먼저 보여줍니다.
 	UpdateQuestView(true);
 }
 
 void UQuestWidget::UpdateQuestView(bool bShowAvailable)
 {
-	// TODO: QuestListBox 내부의 이전 목록들을 삭제하고 새로운 데이터를 채우는 로직 필요
-	
-	// 3. 게임모드에서 자원 정보를 가져와 UI 텍스트와 버튼 상태 업데이트
 	if (AForestVillageGameModeBase* GM = Cast<AForestVillageGameModeBase>(GetWorld()->GetAuthGameMode()))
 	{
-		// 예시 데이터: 나무 울타리 복원 (나무 5개 필요)
-		int32 CurrentWood = GM->GetResourceCount(EResourceType::Wood);
-		bool bCanComplete = CurrentWood >= 5;
-		
-		if (Btn_CompleteQuest)
+		int32 QuestIdx = GM->GetCurrentQuestIndex();
+		bool bCanComplete = false;
+		FString Title = TEXT("");
+		FString Desc = TEXT("");
+
+		switch (QuestIdx)
 		{
-			// 자원이 충분할 때만 버튼 활성화
-			Btn_CompleteQuest->SetIsEnabled(bCanComplete);
-			// 비활성화 시 시각적 피드백 (투명도 조절)
-			Btn_CompleteQuest->SetRenderOpacity(bCanComplete ? 1.0f : 0.5f);
+		case 0: 
+		{
+			Title = TEXT("Quest 1: 마을 입구 보수");
+			int32 Wood = GM->GetResourceCount(EResourceType::Wood);
+			bCanComplete = (Wood >= 5);
+			Desc = FString::Printf(TEXT("마을 입구의 가시덤불을 제거해야 합니다.\n(목재: %d / 5)"), Wood);
+		}
+		break;
+
+		case 1: 
+		{
+			Title = TEXT("Quest 2: 따뜻한 주방 복원");
+			int32 Stone = GM->GetResourceCount(EResourceType::Stone);
+			int32 Wood = GM->GetResourceCount(EResourceType::Wood);
+			int32 Ruby = GM->GetResourceCount(EResourceType::Ruby);
+			bCanComplete = (Stone >= 1 && Wood >= 3 && Ruby >= 1);
+			Desc = FString::Printf(TEXT("무너진 야외 부엌 가마솥을 복구합시다.\n(돌: %d/1, 목재: %d/3, 루비: %d/1)"), Stone, Wood, Ruby);
+		}
+		break;
+
+		case 2: 
+		{
+			Title = TEXT("Quest 3: 광장의 생명수 (최종)");
+			int32 Stone = GM->GetResourceCount(EResourceType::Stone);
+			int32 Wood = GM->GetResourceCount(EResourceType::Wood);
+			int32 Lapis = GM->GetResourceCount(EResourceType::Lapis);
+			int32 Diamond = GM->GetResourceCount(EResourceType::Diamond);
+			bCanComplete = (Stone >= 10 && Wood >= 5 && Lapis >= 1 && Diamond >= 1);
+			Desc = FString::Printf(TEXT("마을의 심장인 우물을 정화합시다.\n(돌:%d/10, 목재:%d/5, 라피스:%d/1, 다이아:%d/1)"), Stone, Wood, Lapis, Diamond);
+		}
+		break;
+
+		default:
+			Title = TEXT("모든 복원 완료!");
+			Desc = TEXT("로렐 밸리에 평화가 찾아왔습니다. 감사합니다!");
+			bCanComplete = false;
+			break;
 		}
 
-		// 텍스트 정보 업데이트
-		if (Text_QuestTitle) 
-			Text_QuestTitle->SetText(FText::FromString(TEXT("나무 울타리 복원")));
-		if (Text_QuestDescription)
+		if (Text_QuestTitle) Text_QuestTitle->SetText(FText::FromString(Title));
+		if (Text_QuestDescription) Text_QuestDescription->SetText(FText::FromString(Desc));
+
+		if (Btn_CompleteQuest)
 		{
-			FString Desc = FString::Printf(TEXT("마을 입구의 부서진 울타리를 고쳐야 합니다.\n(필요한 나무: 5 / 현재 보유: %d)"), CurrentWood);
-			Text_QuestDescription->SetText(FText::FromString(Desc));
+			Btn_CompleteQuest->SetIsEnabled(bCanComplete);
+			Btn_CompleteQuest->SetRenderOpacity(bCanComplete ? 1.0f : 0.5f);
 		}
 	}
 }
@@ -67,19 +94,48 @@ void UQuestWidget::OnCompletedTabClicked()
 
 void UQuestWidget::OnCompleteButtonClicked()
 {
-	// 4. 실제 복원 로직 실행 (로그 출력 후 위젯 닫기)
-	UE_LOG(LogTemp, Warning, TEXT("퀘스트 완료: 마을 복원 시퀀스 시작!"));
-	
-	// 닫기 공용 함수 호출
-	CloseUI();
+	if (AForestVillageGameModeBase* GM = Cast<AForestVillageGameModeBase>(GetWorld()->GetAuthGameMode()))
+	{
+		int32 QuestIdx = GM->GetCurrentQuestIndex();
+		bool bSuccess = false;
+
+		if (QuestIdx == 0)
+		{
+			bSuccess = GM->SpendResource(EResourceType::Wood, 5);
+		}
+		else if (QuestIdx == 1)
+		{
+			if (GM->GetResourceCount(EResourceType::Stone) >= 1 && GM->GetResourceCount(EResourceType::Wood) >= 3 && GM->GetResourceCount(EResourceType::Ruby) >= 1)
+			{
+				GM->SpendResource(EResourceType::Stone, 1);
+				GM->SpendResource(EResourceType::Wood, 3);
+				GM->SpendResource(EResourceType::Ruby, 1);
+				bSuccess = true;
+			}
+		}
+		else if (QuestIdx == 2)
+		{
+			if (GM->GetResourceCount(EResourceType::Stone) >= 10 && GM->GetResourceCount(EResourceType::Wood) >= 5 && GM->GetResourceCount(EResourceType::Lapis) >= 1 && GM->GetResourceCount(EResourceType::Diamond) >= 1)
+			{
+				GM->SpendResource(EResourceType::Stone, 10);
+				GM->SpendResource(EResourceType::Wood, 5);
+				GM->SpendResource(EResourceType::Lapis, 1);
+				GM->SpendResource(EResourceType::Diamond, 1);
+				bSuccess = true;
+			}
+		}
+
+		if (bSuccess)
+		{
+			GM->CompleteQuest();
+			CloseUI();
+		}
+	}
 }
 
 void UQuestWidget::CloseUI()
 {
-	// 화면에서 위젯 제거
 	RemoveFromParent();
-	
-	// 게임 조작 모드로 복구 및 마우스 커서 숨김
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	if (PC)
 	{

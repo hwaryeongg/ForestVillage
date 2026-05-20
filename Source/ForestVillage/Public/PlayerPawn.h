@@ -57,6 +57,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* ia_interact;
 
+	// 퀘스트/인벤토리 키 (J키)를 위한 입력 에셋
+	UPROPERTY(EditAnywhere, Category = "Input")
+	class UInputAction* ia_quest;
+
+	// --- UI 설정 ---
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UQuestWidget> QuestWidgetClass;
+
+	UPROPERTY()
+	class UQuestWidget* CurrentQuestUI;
+
 	// --- 이동 및 점프 변수 ---
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float VerticalVelocity = 0.0f;
@@ -82,5 +93,8 @@ public:
 
 	// 상호작용 실행 함수 (진단용 로그 버전의 매개변수 추가)
 	void Interact(const FInputActionValue& value);
+
+	// 퀘스트 UI 토글 함수
+	void ToggleQuestUI(const FInputActionValue& value);
 };
 

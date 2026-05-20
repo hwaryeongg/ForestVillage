@@ -28,15 +28,15 @@ public:
 	class UBoxComponent* InteractionArea; // 플레이어 접근 감지용 박스
 
 	// --- UI 설정 ---
-	// 에디터에서 할당할 퀘스트 위젯 클래스
+	// 에디터에서 할당할 대화 위젯 클래스 (WBP_Dialogue)
 	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<class UQuestWidget> QuestWidgetClass;
+	TSubclassOf<class UUserWidget> DialogueWidgetClass;
 
 	/** 플레이어와 상호작용 시 호출될 함수 */
 	void OnInteract();
 
 private:
-	// 생성된 위젯 인스턴스를 안전하게 보관 (가비지 컬렉션 방지)
+	// 생성된 대화 위젯 인스턴스
 	UPROPERTY()
-	class UQuestWidget* CurrentQuestUI;
+	class UUserWidget* CurrentDialogueUI;
 };

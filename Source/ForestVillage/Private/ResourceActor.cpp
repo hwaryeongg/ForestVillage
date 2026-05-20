@@ -63,39 +63,60 @@ void AResourceActor::Gather(float Power)
     }
 }
 
-// 아이템 스폰 함수
 void AResourceActor::DropResource()
 {
-    if (GetWorld())
-    {
-        // 스폰 설정: 충돌이 있어도 무조건 생성하되 위치를 랜덤하게 분산
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    if (!GetWorld()) return;
 
-        // 1. 과일 아이템 스폰
-        if (ItemFactory)
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    // 1. 바위 노드인 경우
+    if (bIsRockNode)
+    {
+        // 돌(Stone) 스폰: 100% 확률로 1~2개
+        int32 StoneCount = FMath::RandRange(1, 2);
+        for (int32 i = 0; i < StoneCount; i++)
         {
-            // 랜덤 위치 오프셋 (위로 살짝 띄움)
-            FVector RandomOffset = FVector(FMath::RandRange(-30.f, 30.f), FMath::RandRange(-30.f, 30.f), 50.f);
-            AActor* SpawnedItem = GetWorld()->SpawnActor<AActor>(ItemFactory, GetActorLocation() + RandomOffset, GetActorRotation(), SpawnParams);
-            
-            if (SpawnedItem)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("과일 스폰 성공"));
-            }
+            FVector StoneOffset = FVector(FMath::RandRange(-50.f, 50.f), FMath::RandRange(-50.f, 50.f), 50.f);
+            GetWorld()->SpawnActor<AActor>(StoneFactory, GetActorLocation() + StoneOffset, GetActorRotation(), SpawnParams);
         }
 
-        // 2. 나무 아이템 스폰 (Wood)
+        // 보석(Gemstone) 스폰: 50% 확률로 추가 보너스
+        if (FMath::RandRange(0.0f, 100.0f) <= 50.0f)
+        {
+            TSubclassOf<AActor> SelectedGem = nullptr;
+            int32 GemType = FMath::RandRange(0, 2);
+            
+            switch (GemType)
+            {
+                case 0: SelectedGem = RubyFactory; break;
+                case 1: SelectedGem = DiamondFactory; break;
+                case 2: SelectedGem = LapisFactory; break;
+            }
+
+            if (SelectedGem)
+            {
+                FVector GemOffset = FVector(FMath::RandRange(-70.f, 70.f), FMath::RandRange(-70.f, 70.f), 80.f);
+                GetWorld()->SpawnActor<AActor>(SelectedGem, GetActorLocation() + GemOffset, GetActorRotation(), SpawnParams);
+                UE_LOG(LogTemp, Warning, TEXT("희귀 보석 드랍 성공!"));
+            }
+        }
+    }
+    // 2. 일반 나무 노드인 경우
+    else
+    {
+        // 과일 아이템 스폰
+        if (ItemFactory)
+        {
+            FVector RandomOffset = FVector(FMath::RandRange(-30.f, 30.f), FMath::RandRange(-30.f, 30.f), 50.f);
+            GetWorld()->SpawnActor<AActor>(ItemFactory, GetActorLocation() + RandomOffset, GetActorRotation(), SpawnParams);
+        }
+
+        // 나무 아이템 스폰 (Wood)
         if (WoodFactory)
         {
-            // 과일과 겹치지 않게 다른 방향으로 랜덤 오프셋
             FVector WoodOffset = FVector(FMath::RandRange(-60.f, 60.f), FMath::RandRange(-60.f, 60.f), 50.f);
-            AActor* SpawnedWood = GetWorld()->SpawnActor<AActor>(WoodFactory, GetActorLocation() + WoodOffset, GetActorRotation(), SpawnParams);
-            
-            if (SpawnedWood)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("목재 스폰 성공"));
-            }
+            GetWorld()->SpawnActor<AActor>(WoodFactory, GetActorLocation() + WoodOffset, GetActorRotation(), SpawnParams);
         }
     }
 }
