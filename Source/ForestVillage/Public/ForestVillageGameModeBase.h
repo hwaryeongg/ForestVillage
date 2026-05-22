@@ -42,7 +42,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VillageData")
 	int32 GetCurrentQuestIndex() const { return CurrentQuestIndex; }
 
-	// 퀘스트 완료 처리
+	// 퀘스트 완료 가능 여부 확인
+	UFUNCTION(BlueprintCallable, Category = "VillageData")
+	bool CanCompleteCurrentQuest() const;
+
+	// 퀘스트 완료 시도 (자원 소모 및 CompleteQuest 호출)
+	UFUNCTION(BlueprintCallable, Category = "VillageData")
+	bool TryCompleteCurrentQuest();
+
+	// 퀘스트 완료 실제 처리 (인덱스 증가 및 시설 복구 연출)
 	void CompleteQuest();
 
 protected:
