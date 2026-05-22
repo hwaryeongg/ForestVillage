@@ -53,6 +53,9 @@ public:
 	// 퀘스트 완료 실제 처리 (인덱스 증가 및 시설 복구 연출)
 	void CompleteQuest();
 
+	// 퀘스트 완료 쿨타임 해제용 함수
+	void ResetQuestCooldown();
+
 protected:
 	// 게임 시작 시 호출 (UI 생성용)
 	virtual void BeginPlay() override;
@@ -79,6 +82,10 @@ private:
 
 	// 현재 진행 중인 퀘스트 인덱스 (0: 마을 입구, 1: 요리솥, 2: 우물)
 	int32 CurrentQuestIndex = 0;
+
+	// --- 쿨타임 시스템 ---
+	bool bIsQuestOnCooldown = false;
+	FTimerHandle QuestCooldownTimerHandle;
 
 	// UI 갱신 로직
 	void RefreshHUD();

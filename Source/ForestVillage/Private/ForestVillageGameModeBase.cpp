@@ -75,9 +75,20 @@ bool AForestVillageGameModeBase::CanCompleteCurrentQuest() const
 // 💡 UI 버튼 클릭 시 실행될 실제 채집/소모 로직
 bool AForestVillageGameModeBase::TryCompleteCurrentQuest()
 {
+	// 1. 쿨타임 중인지 확인 (연속 완료 방지)
+	if (bIsQuestOnCooldown)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("퀘스트 완료 쿨타임 중입니다. 잠시 후 다시 시도하세요."));
+		return false;
+	}
+
 	if (!CanCompleteCurrentQuest()) return false;
 
-	// 1. 현재 퀘스트에 맞는 자원 소모
+	// 2. 쿨타임 시작 (3초)
+	bIsQuestOnCooldown = true;
+	GetWorld()->GetTimerManager().SetTimer(QuestCooldownTimerHandle, this, &AForestVillageGameModeBase::ResetQuestCooldown, 3.0f, false);
+
+	// 3. 현재 퀘스트에 맞는 자원 소모
 	switch (CurrentQuestIndex)
 	{
 	case 0:
@@ -97,10 +108,16 @@ bool AForestVillageGameModeBase::TryCompleteCurrentQuest()
 		break;
 	}
 
-	// 2. 통합 완료 처리 함수 호출
+	// 4. 통합 완료 처리 함수 호출
 	CompleteQuest();
 
 	return true;
+}
+
+void AForestVillageGameModeBase::ResetQuestCooldown()
+{
+	bIsQuestOnCooldown = false;
+	UE_LOG(LogTemp, Log, TEXT("퀘스트 완료 쿨타임이 해제되었습니다."));
 }
 
 void AForestVillageGameModeBase::CompleteQuest()

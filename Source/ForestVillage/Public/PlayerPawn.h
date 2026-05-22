@@ -90,6 +90,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float JumpImpulse = 500.0f;
 
+	// --- 킬존 설정 ---
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float KillZoneHeight = -1000.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	FVector SafeLocation = FVector(-2780.0f, 790.0f, 1100.0f);
+
 	bool bIsOnGround = true;
 	bool bIsJumping = false;
 

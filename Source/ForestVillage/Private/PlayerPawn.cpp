@@ -274,6 +274,17 @@ void APlayerPawn::Tick(float DeltaTime)
         }
         SetActorLocation(NewLocation);
     }
+
+    // --- 킬존(Kill Zone) 체크 로직 ---
+    // 플레이어의 현재 높이가 설정된 KillZoneHeight 보다 낮아지면
+    if (GetActorLocation().Z < KillZoneHeight)
+    {
+        // 안전한 위치로 이동 및 속도 초기화
+        SetActorLocation(SafeLocation);
+        VerticalVelocity = 0.0f;
+        
+        UE_LOG(LogTemp, Warning, TEXT("플레이어가 추락하여 세이프존으로 이동되었습니다!"));
+    }
 }
 
 void APlayerPawn::Jump(const FInputActionValue& value)
