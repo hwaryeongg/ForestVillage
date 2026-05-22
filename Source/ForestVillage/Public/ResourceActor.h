@@ -28,7 +28,7 @@ public:
 
 	// --- 2. 핵심 변수 ---
 	UPROPERTY(EditAnywhere, Category = "Resource")
-	float Durability = 3.0f; // 기본 내구도 (3번 맞으면 파괴)
+	float Durability = 1.0f; // 기본 내구도 (1번 맞으면 파괴)
 
 	UPROPERTY(EditAnywhere, Category = "Resource")
 	TSubclassOf<class AActor> ItemFactory; // 파괴 시 떨어뜨릴 아이템 클래스 지정 (사과/오렌지 등)
@@ -58,15 +58,4 @@ public:
 
 	// 자원(아이템)을 생성하는 함수
 	void DropResource();
-
-	// --- 4. 오버랩 델리게이트 함수 (플레이어 접근 감지용) ---
-	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-private:
-	// 코드로 머티리얼의 빛(Emissive)을 조절하기 위한 동적 머티리얼 변수
-	class UMaterialInstanceDynamic* DynamicMat;
 };

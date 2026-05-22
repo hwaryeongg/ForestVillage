@@ -65,8 +65,8 @@ bool AForestVillageGameModeBase::CanCompleteCurrentQuest() const
 {
 	switch (CurrentQuestIndex)
 	{
-	case 0: return (WoodCount >= 5 && DiamondCount >= 1);
-	case 1: return (WoodCount >= 3 && AppleCount >= 5 && RubyCount >= 1);
+	case 0: return (WoodCount >= 5);
+	case 1: return (WoodCount >= 3 && AppleCount >= 1 && RubyCount >= 1);
 	case 2: return (StoneCount >= 10 && WoodCount >= 5 && LapisCount >= 1 && DiamondCount >= 1);
 	default: return false;
 	}

@@ -27,11 +27,11 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
     if (AForestVillageGameModeBase* GM = Cast<AForestVillageGameModeBase>(GetWorld()->GetAuthGameMode()))
     {
        int32 QuestIdx = GM->GetCurrentQuestIndex();
+       bool bCanComplete = GM->CanCompleteCurrentQuest(); // GameMode의 통합 체크 함수 사용
 
        // 1. 진행 가능 탭 (bShowAvailable == true)
        if (bShowAvailable)
        {
-          bool bCanComplete = false;
           FString Title = TEXT("");
           FString Desc = TEXT("");
 
@@ -41,8 +41,7 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
              Title = TEXT("Quest 1: 마을 입구 보수");
              {
                 int32 Wood = GM->GetResourceCount(EResourceType::Wood);
-                bCanComplete = (Wood >= 5);
-                Desc = FString::Printf(TEXT("마을 입구의 가시덤불을 제거해야 합니다.\n(목재: %d / 5)"), Wood);
+                Desc = FString::Printf(TEXT("마을 입구의 가시덤불을 제거해야 합니다.\n(목재: %d / 5"), Wood );
              }
              break;
 
@@ -51,9 +50,9 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
              {
                 int32 Stone = GM->GetResourceCount(EResourceType::Stone);
                 int32 Wood = GM->GetResourceCount(EResourceType::Wood);
+                int32 Apple = GM->GetResourceCount(EResourceType::Apple);
                 int32 Ruby = GM->GetResourceCount(EResourceType::Ruby);
-                bCanComplete = (Stone >= 1 && Wood >= 3 && Ruby >= 1);
-                Desc = FString::Printf(TEXT("무너진 야외 부엌 가마솥을 복구합시다.\n(돌: %d/1, 목재: %d/3, 루비: %d/1)"), Stone, Wood, Ruby);
+                Desc = FString::Printf(TEXT("무너진 야외 부엌 가마솥을 복구합시다.\n(돌: %d/1, 목재: %d/3, 사과: %d/1, 루비: %d/1)"), Stone, Wood, Apple, Ruby);
              }
              break;
 
@@ -64,7 +63,6 @@ void UQuestWidget::UpdateQuestView(bool bShowAvailable)
                 int32 Wood = GM->GetResourceCount(EResourceType::Wood);
                 int32 Lapis = GM->GetResourceCount(EResourceType::Lapis);
                 int32 Diamond = GM->GetResourceCount(EResourceType::Diamond);
-                bCanComplete = (Stone >= 10 && Wood >= 5 && Lapis >= 1 && Diamond >= 1);
                 Desc = FString::Printf(TEXT("마을의 심장인 우물을 정화합시다.\n(돌: %d/10, 목재: %d/5, 라피스: %d/1, 다이아: %d/1)"), Stone, Wood, Lapis, Diamond);
              }
              break;
@@ -124,55 +122,25 @@ void UQuestWidget::OnCompleteButtonClicked()
     if (AForestVillageGameModeBase* GM = Cast<AForestVillageGameModeBase>(GetWorld()->GetAuthGameMode()))
     {
        int32 QuestIdx = GM->GetCurrentQuestIndex();
-       bool bSuccess = false;
 
-       if (QuestIdx == 0)
+       // GameMode에 구현된 쿨타임 로직이 포함된 함수를 호출합니다.
+       if (GM->TryCompleteCurrentQuest())
        {
-          bSuccess = GM->SpendResource(EResourceType::Wood, 5);
-       }
-       else if (QuestIdx == 1)
-       {
-          if (GM->GetResourceCount(EResourceType::Stone) >= 1 && GM->GetResourceCount(EResourceType::Wood) >= 3 && GM->GetResourceCount(EResourceType::Ruby) >= 1)
-          {
-             GM->SpendResource(EResourceType::Stone, 1);
-             GM->SpendResource(EResourceType::Wood, 3);
-             GM->SpendResource(EResourceType::Ruby, 1);
-             bSuccess = true;
-          }
-       }
-       else if (QuestIdx == 2)
-       {
-          if (GM->GetResourceCount(EResourceType::Stone) >= 10 && GM->GetResourceCount(EResourceType::Wood) >= 5 && GM->GetResourceCount(EResourceType::Lapis) >= 1 && GM->GetResourceCount(EResourceType::Diamond) >= 1)
-          {
-             GM->SpendResource(EResourceType::Stone, 10);
-             GM->SpendResource(EResourceType::Wood, 5);
-             GM->SpendResource(EResourceType::Lapis, 1);
-             GM->SpendResource(EResourceType::Diamond, 1);
-             bSuccess = true;
-          }
-       }
-
-       if (bSuccess)
-       {
-          // 퀘스트 완료 처리
-          GM->CompleteQuest();
-          
-          // --- 모모(NPC) 즉시 순간이동 처리 ---
+          // 퀘스트 완료 성공 시 모모(NPC) 즉시 순간이동 처리
           AActor* FoundNPC = UGameplayStatics::GetActorOfClass(GetWorld(), ANPCCharacter::StaticClass());
           if (FoundNPC)
           {
-             if (QuestIdx == 0) // 첫 번째 퀘스트가 방금 완료됨
+             if (QuestIdx == 0) // 첫 번째 퀘스트 완료
              {
                 FoundNPC->SetActorLocation(FVector(2570.0f, 4210.0f, 910.0f));
              }
-             else if (QuestIdx == 1) // 두 번째 퀘스트가 방금 완료됨
+             else if (QuestIdx == 1) // 두 번째 퀘스트 완료
              {
-                FoundNPC->SetActorLocation(FVector(1450.0f, -460.0f, 910.0f));
+                FoundNPC->SetActorLocation(FVector(1450.0f, 970.0f, 910.0f));
              }
           }
           
-          // --- 더블 클릭 버그 방지 ---
-          // UpdateQuestView(true)를 호출하여 갱신하지 않고, 즉시 UI를 닫아버립니다.
+          // 더블 클릭 버그 방지 및 연출을 위해 즉시 UI를 닫습니다.
           CloseUI();
        }
     }

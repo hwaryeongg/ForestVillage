@@ -28,9 +28,14 @@ AItemActor::AItemActor()
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetupAttachment(RootComponent);
 	
-	// 메쉬가 바닥을 뚫지 않게 하려면 물리 시뮬레이션을 켤 수 있습니다.
-	// MeshComp->SetSimulatePhysics(true); // 필요 시 에디터에서 켜주세요.
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// --- 수정 포인트: 물리 설정 및 튕김 방지 ---
+	// 아이템이 바닥에 떨어지도록 물리 시뮬레이션을 켭니다.
+	MeshComp->SetSimulatePhysics(true);
+	// 아이템끼리 부딪혀 날아가는 것을 방지하기 위해 아이템 채널(WorldDynamic)끼리의 충돌은 무시합니다.
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
+	MeshComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore); // 아이템끼리는 무시
+	MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);         // 플레이어와는 겹침만
 
 	// 3. 충돌 이벤트(Overlap) 발생 시 호출될 함수 연결
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AItemActor::OnOverlapBegin);
@@ -39,13 +44,6 @@ AItemActor::AItemActor()
 void AItemActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// --- 추가 수정: 메쉬가 충돌을 방해하지 않도록 확실히 설정 ---
-	if (MeshComp)
-	{
-		MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		MeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
-	}
 
 	// 생성되자마자 플레이어 발밑에 있다면 즉시 감지
 	SphereComp->UpdateOverlaps();

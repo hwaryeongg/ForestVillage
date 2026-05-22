@@ -48,7 +48,7 @@ void ANPCCharacter::OnInteract()
 
     case 2:
        // 2번째 퀘스트 완료 직후 (최종 우물 제단 위치로 이동)
-       SetActorLocation(FVector(1450.0f, -460.0f, 910.0f));
+       SetActorLocation(FVector(1450.0f, 970.0f, 910.0f));
 
        DialogueList.Add({ TEXT("모모"), TEXT("냐-옹! (광장 중앙의 우물 기둥 위에서 힘차게 울며 라비를 기다린다.)") });
        DialogueList.Add({ TEXT("라비"), TEXT("이제 마지막 제단이야. 우물을 정화해서 마을에 생명수를 다시 흐르게 하자!") });
